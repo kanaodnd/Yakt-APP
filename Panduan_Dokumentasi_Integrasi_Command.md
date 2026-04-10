@@ -152,4 +152,26 @@ Axeron.addBinderReceivedListenerSticky {
 
 
 ---
+
+## 4. Deteksi Environment (Root vs Non-Root / AxManager)
+
+Terkadang skrip atau aplikasi perlu mengetahui apakah ia dieksekusi dalam environment **Root** atau **Non-Root** (seperti ADB shell via AxManager). Hal ini bisa dilakukan dengan menjalankan perintah `id` dan mengecek *output*-nya.
+
+### Non-Root / AxManager (Shell)
+Jika output dari perintah `id` mengandung `shell`, ini menandakan environment berjalan menggunakan *privilege* ADB (Non-Root).
+
+Contoh output:
+```text
+uid=2000(shell) gid=2000(shell) groups=2000(shell),1004(input),1007(log),1011(adb),1015(sdcard_rw),1028(sdcard_r),1078(ext_data_rw),1079(ext_obb_rw),3001(net_bt_admin),3002(net_bt),3003(inet),3006(net_bw_stats),3009(readproc),3011(uhid),3012(readtracefs) context=u:r:shell:s0
+```
+
+### Root User
+Jika output dari perintah `id` mengandung `root`, ini menandakan environment memiliki akses Superuser/Root secara penuh.
+
+Contoh output:
+```text
+uid=0(root) gid=0(root) groups=0(root) context=u:r:su:s0
+```
+
+---
 *Catatan:* Pastikan untuk memperbarui kode `<versi_terbaru>` pada bagian dependensi dengan versi rilis API yang mutakhir.
