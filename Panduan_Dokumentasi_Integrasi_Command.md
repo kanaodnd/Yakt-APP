@@ -1,17 +1,44 @@
-# Panduan Dokumentasi Integrasi AxManager
+# Panduan Dokumentasi Integrasi Eksekusi Command (YAKT & AxManager)
 
-AxManager memungkinkan aplikasi klien (pihak ketiga) untuk mengeksekusi perintah shell dan skrip dengan hak akses tinggi (Privilege - ADB/Root) melalui layanan AxManager.
-
-Ada dua cara utama yang bisa Anda gunakan untuk mengintegrasikan layanan ini agar bisa menjalankan perintah seperti `uname -r` dan sebagainya:
-
-1. **Menggunakan Axerish dengan libsu** (Direkomendasikan untuk aplikasi yang mengandalkan penggunaan shell standar)
-2. **Menggunakan Axeron API Langsung** (Lebih mendasar, tanpa harus bergantung pada `libsu`)
-
-Berikut ini adalah langkah-langkah implementasinya:
+Dokumen ini menjelaskan berbagai cara yang dapat digunakan untuk mengeksekusi perintah shell (seperti `uname -r`) dan skrip dengan hak akses tinggi (Root/Privilege). Terdapat metode asli (Native) yang digunakan oleh YAKT dan metode integrasi melalui layanan AxManager.
 
 ---
 
-## 1. Menggunakan Axerish + libsu
+## 1. Metode Native YAKT (Menggunakan `Runtime.getRuntime()`)
+
+Secara *default*, YAKT mengeksekusi perintah shell langsung menggunakan *built-in library* Java/Kotlin tanpa bergantung pada *library* pihak ketiga seperti `libsu`. Pendekatan ini sangat ringan dan menggunakan pemanggilan `su` langsung melalui kelas `Runtime`.
+
+### Eksekusi Perintah Secara Langsung (Contoh: `uname -r`)
+
+Untuk menjalankan perintah yang memerlukan *root* dan membaca hasilnya (*output*), Anda dapat menggunakan cara berikut:
+
+```kotlin
+fun executeRootCommand(command: String): String {
+    return try {
+        // Mengeksekusi perintah melalui binary root (su)
+        val process = Runtime.getRuntime().exec(arrayOf("su", "-c", command))
+
+        // Membaca luaran/output secara langsung
+        val output = process.inputStream.bufferedReader().use { it.readText() }
+
+        // Tunggu proses perintah hingga tuntas
+        process.waitFor()
+
+        output.trim()
+    } catch (e: Exception) {
+        e.printStackTrace()
+        "Error: ${e.message}"
+    }
+}
+
+// Cara menggunakan:
+// val kernelVersion = executeRootCommand("uname -r")
+// println("Versi Kernel: $kernelVersion")
+```
+
+---
+
+## 2. Menggunakan Axerish + libsu (Layanan AxManager)
 
 Axerish adalah *shell wrapper* bawaan AxManager yang akan otomatis menghubungkan aplikasi Anda ke antarmuka populer `libsu` buatan *topjohnwu*. Metode ini sangat mudah karena Anda bisa menggunakan gaya eksekusi `libsu` secara transparan namun berjalan di konteks AxManager.
 
@@ -71,7 +98,7 @@ if (result.isSuccess) {
 
 ---
 
-## 2. Menggunakan Axeron API Langsung
+## 3. Menggunakan Axeron API Langsung (Layanan AxManager)
 
 Apabila Anda membutuhkan tingkat integrasi yang lebih mendalam, atau jika Anda memang tidak menggunakan pustaka `libsu`, Anda dapat langsung terhubung (*bind*) ke layanan IPC milik AxManager.
 
